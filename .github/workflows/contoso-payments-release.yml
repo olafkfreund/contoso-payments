@@ -1,0 +1,24 @@
+name: Contoso-Payments/Contoso-Payments-Release
+on:
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: contoso-payments-prod
+    if: github.RUN_NUMBER == 1
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4.1.0
+    - name: download artifact
+      uses: actions/download-artifact@v4.1.0
+    - uses: azure/login@v1.6.0
+      with:
+        creds: "${{ secrets.AZURE_CREDENTIALS }}"
+    - run: az webapp deploy --name payments-api
+      shell: bash
+#     # This item has no matching transformer
+#     - task: acme-corp.vault-tools.FetchSecret@2
+#       inputs:
+#         vault: contoso-kv
+#         secret: PAYMENTS_DB_PASSWORD
