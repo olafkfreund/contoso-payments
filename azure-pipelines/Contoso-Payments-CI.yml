@@ -1,0 +1,37 @@
+---
+trigger:
+  branches:
+    include:
+    - main
+    - releases/*
+pool:
+  vmImage: ubuntu-latest
+variables:
+- group: contoso-payments-shared
+strategy:
+  matrix:
+    net8:
+      dotnetVersion: 8.0.x
+    net6:
+      dotnetVersion: 6.0.x
+steps:
+- task: UseDotNet@2
+  inputs:
+    version: "$(dotnetVersion)"
+- task: DownloadSecureFile@1
+  name: signingCert
+  inputs:
+    secureFile: contoso-code-signing.pfx
+- script: dotnet restore && dotnet build -c Release
+  displayName: Build
+- task: SonarQubePrepare@5
+  inputs:
+    SonarQube: sonarqube-prod
+    scannerMode: MSBuild
+    projectKey: contoso-payments
+- script: dotnet test --collect:"XPlat Code Coverage"
+  displayName: Test
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathToPublish: "$(Build.ArtifactStagingDirectory)"
+    artifactName: drop
